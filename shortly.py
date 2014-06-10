@@ -1,4 +1,4 @@
-from cup import Cup
+from cup import Cup, render_template
 
 app = Cup()
 
@@ -10,7 +10,7 @@ def new_url(request):
         url = request.form['url']
         short_id = url
         return redirect('/%s+' % short_id)
-    return "HEllo"
+    return render_template("new_url.html")
 
 @app.route('/<short_id>')
 def follow_short_link(request, short_id):

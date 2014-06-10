@@ -6,15 +6,16 @@ from werkzeug.wsgi import SharedDataMiddleware
 from werkzeug.utils import redirect
 from jinja2 import Environment, FileSystemLoader
 
+template_path = os.path.join(os.path.dirname(__file__), 'templates')
+jinja_env = Environment(loader=FileSystemLoader(template_path),
+                             autoescape=True)
+
 class Cup(object):
     def __init__(self, with_static=True):
-        template_path = os.path.join(os.path.dirname(__file__), 'templates')
         if with_static:
             self.wsgi_app = SharedDataMiddleware(self.wsgi_app, {
                 '/static':  os.path.join(os.path.dirname(__file__), 'static')
             })
-        self.jinja_env = Environment(loader=FileSystemLoader(template_path),
-                                 autoescape=True)
         self.url_map = Map()
         self.views = {}
 
@@ -33,16 +34,12 @@ class Cup(object):
             return decorated
         return decorator
 
-    def render_template(self, template_name, **context):
-        t = self.jinja_env.get_template(template_name)
-        return Response(t.render(context), mimetype='text/html')
-
     def dispatch_request(self, request):
         adapter = self.url_map.bind_to_environ(request.environ)
         try:
             endpoint, values = adapter.match()
             data = self.getView(endpoint)(request, **values)
-            return Response(data)
+            return Response(data, mimetype="text/html")
         except HTTPException, e:
             print "e"
             return e
@@ -58,4 +55,10 @@ class Cup(object):
     def run(self, host, port, use_debugger=True, use_reloader=True):
         from werkzeug.serving import run_simple
         run_simple(host, port, self, use_debugger, use_reloader)
+
+
+# utilities
+def render_template(template_name, **context):
+        t = jinja_env.get_template(template_name)
+        return t.render(context)
 
