@@ -24,12 +24,14 @@ class Cup(object):
 
     def getView(self, endpoint):
         return self.views[endpoint]
-
-    def route(self, func):
-        self.add_url_rule('/', func.__name__, func)
-        def decorator(*args, **kwargs):
-            func(*args, **kwargs)
-            return decorator
+    
+    def route(self, url):
+        def decorator(func):
+            self.add_url_rule(url, func.__name__, func)
+            def decorated(*args, **kwargs):
+                func(*args, **kwargs)
+            return decorated
+        return decorator
 
     def render_template(self, template_name, **context):
         t = self.jinja_env.get_template(template_name)
